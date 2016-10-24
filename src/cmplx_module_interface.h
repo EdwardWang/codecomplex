@@ -9,15 +9,27 @@ typedef struct{
 }cmplx_module_token_t;
 
 /*
+ * module初始化
+ * 0表示初始化成功,其他表示失败
+ * */
+typedef int (*cmplx_module_init_pf)(void);
+
+/*
+ * module退出函数
+ * 0表示成功，其他表示失败
+ */
+typedef int (*cmplx_module_exit_pf)(void);
+
+/*
  * C语言解析的模块需要返回token的名称和位置
  * cmplx_module_token_t 结构体给解析模块和主程序一起使用
  */
 typedef int (*cmplx_module_scan_token_pf)(FILE *fp, cmplx_module_token_t *token);
 
 /*
- * 修改fp中的token
- * len 为原token的长度
+ * 混乱传入的token，返回混乱的token，生成的token应当满足该语言的语法规则
+ * 出错返回NULL
  */
-typedef int (*cmplx_module_amend_token_pf)(char *filename, cmplx_module_token_t *token, int len);
+typedef char *(*cmplx_module_complex_token_pf)(const char *token);
 
 #endif

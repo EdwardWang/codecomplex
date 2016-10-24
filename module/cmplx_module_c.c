@@ -1,6 +1,8 @@
-#include "cmplx_module_c.h"
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
+#include <stdlib.h>
+#include "cmplx_module_c.h"
 
 typedef enum {
 	mc_start_s,					/* 开始解析 */
@@ -23,6 +25,7 @@ typedef enum {
 }mc_state_s;
 
 #define MC_MAXBUFSIZE	1024
+#define MC_MAXTOKENLEN  30
 
 static const char *keywords[] = {
 	"void","double","int","float","char",
@@ -33,6 +36,26 @@ static const char *keywords[] = {
 	"if","else","switch","case","default","for",
 	"do","while",NULL
 };
+
+static const char *pre_char = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char *other_char = "0123456789\
+                                 _abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+int cmplx_mc_init(void)
+{
+    srand((unsigned)time(NULL));
+    return 0;
+}
+
+int cmplx_mc_exit(void)
+{
+    return 0;
+}
+
+static int range_rand(int i, int n)
+{
+    return (rand()%(n-i+1) + i);
+}
 
 /*
  * 功能：输入字符串是否是C语言关键字
@@ -154,7 +177,6 @@ static mc_state_s state(mc_state_s s, int c)
 	return s;
 }
 
-
 int 
 cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 {
@@ -211,9 +233,28 @@ cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 	return c;
 }
 
-int 
-cmplx_mc_amend_token(char *filename, cmplx_module_token_t *token,int len)
+char * 
+cmplx_mc_complex_token(const char *token)
 {
+    int i, pos, newlen;
+    char buf[MC_MAXTOKENLEN];    
+    memset(buf, 0, MC_MAXTOKENLEN+1);
+
+    if (*token != '\0') {
+        newlen = range_rand(1,MAC_MAXTOKENLEN);
+        pos = range_rand(0,strlen(pre_char)-1);
+        buf[0] = pre_char(pos);
+        for (i = 1; i < newlen;i++) {
+            pos = range_rand(0,strlen(other_char)-1);
+            buf[i] = other_char(pos);
+        }
+        buf[i] = '\0';
+        return strdup(buf);
+    } else {
+        return NULL;
+    }
+    //选择初始字符
+    /*
 	int c;
 	unsigned int count;
 
@@ -247,5 +288,6 @@ cmplx_mc_amend_token(char *filename, cmplx_module_token_t *token,int len)
 	fclose(tmpfp);
 	remove("tmp");
 	return 0;
+    */
 }
 

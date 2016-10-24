@@ -54,6 +54,7 @@ void print_udata(void *data)
 
 struct token_s{
 	char *token;
+    char *complex_token;
 	list_t *position;
 };
 
@@ -99,6 +100,7 @@ cmplx_core_t *cmplx_core_init(const char *module_name)
     core = (struct cmplx_core_s *)malloc(sizeof(struct cmplx_core_s));
     if (core) {
         core->module = cmplx_module_get_by_name(module_name);
+        core->module->init_pf();
         core->t = tree_init(sizeof(struct token_s), create_token, cmp_token);
     }
     return core;
@@ -154,4 +156,5 @@ void cmplx_core_free(cmplx_core_t *core)
 {
     tree_free(core->t, free_token);
     free(core);
+    core->module->exit_pf();
 }

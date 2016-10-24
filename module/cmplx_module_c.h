@@ -4,7 +4,9 @@
 
 #define CMPLX_MC_NAME	"C"
 
+int cmplx_mc_init(void);
+int cmplx_mc_exit(void);
 int cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token);
-int cmplx_mc_amend_token(char *filename, cmplx_module_token_t *token,int len);
+char *cmplx_mc_complex_token(const char *token);
 
 #endif
