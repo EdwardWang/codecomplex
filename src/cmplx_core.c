@@ -92,6 +92,7 @@ static void free_token(void *p)
 {
     struct token_s *t = (struct token_s *)p;
     free(t->token);
+    free(t->complex_token);
     list_free(t->position);
 }
 
@@ -132,10 +133,10 @@ int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
 {
     FILE *fp = NULL;
     FILE *tmp_fp = NULL;
-    struct udata data;
     int curpos,prevpos;
-    int i; char *cmplx_str;
+    int i;
     cmplx_module_token_t token;
+    struct token_s *data = NULL;
 
     tmp_fp = fopen("tmp", "w+");
 
@@ -147,11 +148,14 @@ int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
             for(i = 0; i < (token.offset-prevpos); i++) {
                 fputc(fgetc(fp), tmp_fp);
             }
-            cmplx_str = core->module->complex_token(token.token);
-            if (cmplx_str != NULL) {
-                fputs(cmplx_str, tmp_fp);
-                free(cmplx_str);
-                cmplx_str = NULL;
+            data = (struct token_s *)tree_get_adata(core->t, token.token);
+            if (data != NULL) {
+                if (data->complex_token == NULL) {
+                    data->complex_token = core->module->complex_token(token.token);
+                }
+            }
+            if (data->complex_token != NULL) {
+                fputs(data->complex_token, tmp_fp);
             }
             prevpos = curpos;
             fseek(fp,curpos, SEEK_SET);
