@@ -237,16 +237,16 @@ char *
 cmplx_mc_complex_token(const char *token)
 {
     int i, pos, newlen;
-    char buf[MC_MAXTOKENLEN];    
+    char buf[MC_MAXTOKENLEN+1];    
     memset(buf, 0, MC_MAXTOKENLEN+1);
 
     if (*token != '\0') {
-        newlen = range_rand(1,MAC_MAXTOKENLEN);
+        newlen = range_rand(1,MC_MAXTOKENLEN);
         pos = range_rand(0,strlen(pre_char)-1);
-        buf[0] = pre_char(pos);
+        buf[0] = pre_char[pos];
         for (i = 1; i < newlen;i++) {
             pos = range_rand(0,strlen(other_char)-1);
-            buf[i] = other_char(pos);
+            buf[i] = other_char[pos];
         }
         buf[i] = '\0';
         return strdup(buf);

@@ -66,6 +66,8 @@ static void create_token(void *p, void *key, void *data)
 		to->token = strdup((char *)key);
 	}
 
+    to->complex_token = NULL;
+
 	if (to->position == NULL) {
 		to->position = list_init(make_udata, free_udata, cmp_udata);
 	}
@@ -100,7 +102,7 @@ cmplx_core_t *cmplx_core_init(const char *module_name)
     core = (struct cmplx_core_s *)malloc(sizeof(struct cmplx_core_s));
     if (core) {
         core->module = cmplx_module_get_by_name(module_name);
-        core->module->init_pf();
+        core->module->init();
         core->t = tree_init(sizeof(struct token_s), create_token, cmp_token);
     }
     return core;
@@ -114,7 +116,7 @@ int cmplx_core_parse_table(cmplx_core_t *core, const char *file)
 
     if ((fp = fopen(file, "r")) != NULL) {
         data.filename = strdup(file);
-        while (core->module->scan_token_pf(fp,&token) != EOF) {
+        while (core->module->scan_token(fp,&token) != EOF) {
             data.offset = token.offset;
             tree_insert(core->t,token.token,&data);
         }
@@ -126,8 +128,54 @@ int cmplx_core_parse_table(cmplx_core_t *core, const char *file)
     return -1; 
 }
 
-//这里用迭代器实现
-int cmplx_core_complex_code(cmplx_core_t *core, cmplx_complex_algorithm_pf complex_fun)
+int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
+{
+    FILE *fp = NULL;
+    FILE *tmp_fp = NULL;
+    struct udata data;
+    int curpos,prevpos;
+    int i; char *cmplx_str;
+    cmplx_module_token_t token;
+
+    tmp_fp = fopen("tmp", "w+");
+
+    curpos = prevpos = 0;
+    if ((fp = fopen(filename, "r")) != NULL) {
+        while (core->module->scan_token(fp,&token) != EOF) {
+            curpos = token.offset;
+            fseek(fp,prevpos-token.offset,SEEK_CUR);
+            for(i = 0; i < (token.offset-prevpos); i++) {
+                fputc(fgetc(fp), tmp_fp);
+            }
+            cmplx_str = core->module->complex_token(token.token);
+            if (cmplx_str != NULL) {
+                fputs(cmplx_str, tmp_fp);
+                free(cmplx_str);
+                cmplx_str = NULL;
+            }
+            prevpos = curpos;
+            fseek(fp,curpos, SEEK_SET);
+        }
+        fseek(fp,curpos,SEEK_SET);
+        while ((i = fgetc(fp)) != EOF) {
+            fputc(i, tmp_fp);
+        }
+        fclose(fp);
+    }
+    
+    fp = fopen(filename, "w");
+    fseek(tmp_fp, 0, SEEK_SET);
+    while ((i = fgetc(tmp_fp)) != EOF) {
+        fputc(i, fp);
+    }
+    fclose(fp);
+    fclose(tmp_fp);
+    remove("tmp");
+    return 0;
+}
+
+/*
+int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
 {
     char *cstr = NULL;
     char *filename = NULL;
@@ -150,11 +198,11 @@ int cmplx_core_complex_code(cmplx_core_t *core, cmplx_complex_algorithm_pf compl
     free(iterator);
 
 	return 0;
-}
+}*/
 
 void cmplx_core_free(cmplx_core_t *core)
 {
     tree_free(core->t, free_token);
+    core->module->exit();
     free(core);
-    core->module->exit_pf();
 }

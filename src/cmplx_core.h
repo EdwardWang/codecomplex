@@ -4,8 +4,6 @@
 
 typedef struct cmplx_core_s cmplx_core_t;
 
-typedef char *(*cmplx_complex_algorithm_pf)(const char *token);
-
 cmplx_core_t *
 cmplx_core_init(const char *module_name);
 
@@ -16,5 +14,5 @@ int
 cmplx_core_parse_table(cmplx_core_t *core, const char *file);
 
 int 
-cmplx_core_complex_code(cmplx_core_t *core, cmplx_complex_algorithm_pf complex_fun);
+cmplx_core_complex_code(cmplx_core_t *core, char *filename);
 #endif

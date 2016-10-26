@@ -123,10 +123,10 @@ static void *get_data(tree_t *t, itree_t *p, void *key)
 		}
 
 		if (cmp < 0){
-			if (tn->left) get_data(t, &tn->left, key);
+			if (tn->left) return get_data(t, &tn->left, key);
 		}
 		if (cmp > 0) {
-			if (tn->right) get_data(t, &tn->right, key);
+			if (tn->right) return get_data(t, &tn->right, key);
 		}
     }
 }
