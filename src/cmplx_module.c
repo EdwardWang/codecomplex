@@ -4,7 +4,8 @@
 
 static cmplx_module_t cmplx_module_set[] = {
 	{CMPLX_MC_NAME, cmplx_mc_init, cmplx_mc_exit, \
-        cmplx_mc_scan_token, cmplx_mc_complex_token},
+        cmplx_mc_scan_token, cmplx_mc_complex_token,\
+        cmplx_mc_is_module_file},
 	{NULL,NULL,NULL},
 };
 

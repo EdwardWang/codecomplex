@@ -8,5 +8,6 @@ int cmplx_mc_init(void);
 int cmplx_mc_exit(void);
 int cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token);
 char *cmplx_mc_complex_token(const char *token);
+int cmplx_mc_is_module_file(const char *filename);
 
 #endif

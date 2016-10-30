@@ -115,6 +115,8 @@ int cmplx_core_parse_table(cmplx_core_t *core, const char *file)
     struct udata data;
     cmplx_module_token_t token;
 
+    if (!core->module->is_module_file(file))
+        return 0;
     if ((fp = fopen(file, "r")) != NULL) {
         data.filename = strdup(file);
         while (core->module->scan_token(fp,&token) != EOF) {
@@ -134,19 +136,33 @@ int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
     FILE *fp = NULL;
     FILE *tmp_fp = NULL;
     int curpos,prevpos;
-    int i;
+    int i, c;
     cmplx_module_token_t token;
     struct token_s *data = NULL;
+	int outlen;
+
+    if (!core->module->is_module_file(filename))
+        return 0;
 
     tmp_fp = fopen("tmp", "w+");
-
-    curpos = prevpos = 0;
+    curpos = 0;
     if ((fp = fopen(filename, "r")) != NULL) {
+		prevpos = ftell(fp);
         while (core->module->scan_token(fp,&token) != EOF) {
             curpos = token.offset;
-            fseek(fp,prevpos-token.offset,SEEK_CUR);
-            for(i = 0; i < (token.offset-prevpos); i++) {
-                fputc(fgetc(fp), tmp_fp);
+			fseek(fp,prevpos,SEEK_SET);
+			outlen = curpos-strlen(token.token);
+            for(i = prevpos; i < outlen; i++) {
+				c = fgetc(fp);
+#ifdef _WIN32
+				if (c == 0x0a) {	//读文件遇到换行时，相当于两个字符，
+					i++;			//指针会向后移动，多移动了一次,但客户外部计数器并不知道，
+					fputc('\n',tmp_fp);//导致文件指针向后偏移
+					continue;
+				}
+#endif
+            	//printf("%02x ,%c, %d\n",c,c,ftell(fp)-1);
+                fputc(c, tmp_fp);
             }
             data = (struct token_s *)tree_get_adata(core->t, token.token);
             if (data != NULL) {
@@ -155,10 +171,11 @@ int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
                 }
             }
             if (data->complex_token != NULL) {
-                fputs(data->complex_token, tmp_fp);
+                printf("%s, %s\n", token.token, data->complex_token);
+				fputs(data->complex_token, tmp_fp);
             }
-            prevpos = curpos;
-            fseek(fp,curpos, SEEK_SET);
+           fseek(fp,curpos+1, SEEK_SET); 
+		   prevpos = curpos;
         }
         fseek(fp,curpos,SEEK_SET);
         while ((i = fgetc(fp)) != EOF) {
@@ -177,32 +194,6 @@ int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
     remove("tmp");
     return 0;
 }
-
-/*
-int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
-{
-    char *cstr = NULL;
-    char *filename = NULL;
-	struct udata *data;
-	struct token_s tree_data;
-	cmplx_module_token_t mtoken_s;
-
-    iterator_t *iterator = iterator_init(core->t);
-
-    while (iterator_step(iterator, &tree_data) != 1) {
-        cstr = complex_fun(tree_data.token);
-        while ((data = list_pop(tree_data.position)) != NULL) {
-			mtoken_s.token = cstr;
-			mtoken_s.offset = data->offset;
-			core->module->amend_token_pf(data->filename, &mtoken_s,strlen(tree_data.token));
-		}
-		free(cstr);
-		cstr = NULL;
-    }
-    free(iterator);
-
-	return 0;
-}*/
 
 void cmplx_core_free(cmplx_core_t *core)
 {

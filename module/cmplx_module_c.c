@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -34,12 +35,11 @@ static const char *keywords[] = {
 	"auto","static","register","extern","const",
     "volatile","return","continue","break","goto",
 	"if","else","switch","case","default","for",
-	"do","while",NULL
+	"do","while","NULL", NULL
 };
 
 static const char *pre_char = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-static const char *other_char = "0123456789\
-                                 _abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char *other_char = "0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 int cmplx_mc_init(void)
 {
@@ -181,7 +181,6 @@ int
 cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 {
 	int c, i;
-	static int count = 0;
 	mc_state_s s;
 	char buf[MC_MAXBUFSIZE];
 
@@ -190,7 +189,6 @@ cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 	i = 0;
 	memset(buf,0,MC_MAXBUFSIZE);
 	while ( (c = fgetc(fp)) != EOF) {
-		count++;
 		s = state(s,c);
 		switch(s) {
 		case mc_token_s:
@@ -200,18 +198,20 @@ cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 			buf[i] = '\0';
 			if (!iskeyword(buf)) {
 				token->token = strdup(buf);
-				token->offset = count-strlen(buf);
+				token->offset = ftell(fp)-1;
 				return 0;
 			} else {
 				c = EOF;
 				s = mc_start_s;
 				i = 0;
+				memset(buf,0,MC_MAXBUFSIZE);
 				continue;
 			}
 		case mc_function_s:
 			c = EOF;
 			s = mc_start_s;
 			i = 0;
+			memset(buf,0,MC_MAXBUFSIZE);
 			continue;
 		case mc_start_s:
 		case mc_precompile_s:
@@ -229,7 +229,6 @@ cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 		default:continue;
 		}
 	}
-	count = 0;
 	return c;
 }
 
@@ -253,41 +252,15 @@ cmplx_mc_complex_token(const char *token)
     } else {
         return NULL;
     }
-    //Ñ¡Ôñ³õÊ¼×Ö·û
-    /*
-	int c;
-	unsigned int count;
-
-	FILE *fp, *tmpfp;
-
-	fp = fopen(filename,"r");
-	tmpfp = fopen("tmp","wt+");
-
-	count = 0;
-	while ((c = fgetc(fp)) != EOF) {
-		count++;
-		if (count == token->offset) {
-			fputs(token->token,tmpfp);
-			fseek(fp,len-1,SEEK_CUR);
-			count += (len-1);
-		} else {
-			fputc(c,tmpfp);
-		}
-	}
-	fclose(fp);
-	fclose(tmpfp);
-
-	fp = fopen(filename,"w");
-	tmpfp = fopen("tmp","r");
-
-	while ((c = fgetc(tmpfp)) != EOF) {
-		fputc(c,fp);
-	}
-	
-	fclose(fp);
-	fclose(tmpfp);
-	remove("tmp");
-	return 0;
-    */
 }
 
+int cmplx_mc_is_module_file(const char *filename)
+{
+    char *p = NULL;
+    p = strrchr(filename,'.');
+    if (!strcmp(p,".c") || !strcmp(p,".h")) {
+        return 1;
+    } else {
+        return 0;
+    }
+}

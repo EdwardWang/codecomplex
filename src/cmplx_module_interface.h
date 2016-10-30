@@ -32,4 +32,9 @@ typedef int (*cmplx_module_scan_token_pf)(FILE *fp, cmplx_module_token_t *token)
  */
 typedef char *(*cmplx_module_complex_token_pf)(const char *token);
 
+/*
+ * 判断文件是否需要解析,用于过滤非本模块的文件
+ * */
+typedef int (*cmplx_module_filter_pf)(const char *filename);
+
 #endif

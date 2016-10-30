@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     char *filename = NULL;
     cmplx_core_t *core;
     cmplx_file_manage_t *file_manage = NULL;
-    file_manage = cpmlx_file_init("","");
+    file_manage = cpmlx_file_init("tmpdir1","tmpdir2");
     core = cmplx_core_init("C");
     if (file_manage && core) {
         while ( (filename = cmplx_file_get_a_file(file_manage)) != NULL) {

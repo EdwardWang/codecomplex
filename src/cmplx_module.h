@@ -9,6 +9,7 @@ typedef struct {
     cmplx_module_exit_pf exit;
 	cmplx_module_scan_token_pf scan_token;
 	cmplx_module_complex_token_pf complex_token;
+    cmplx_module_filter_pf is_module_file;
 }cmplx_module_t;
 
 cmplx_module_t *cmplx_module_get_by_name(const char *name);
