@@ -64,11 +64,10 @@ static void create_token(void *p, void *key, void *data)
 
 	if (to->token == NULL) {
 		to->token = strdup((char *)key);
+        to->complex_token = NULL;
 	}
 
-    to->complex_token = NULL;
-
-	if (to->position == NULL) {
+    if (to->position == NULL) {
 		to->position = list_init(make_udata, free_udata, cmp_udata);
 	}
 	list_insert(to->position, data);
@@ -124,7 +123,6 @@ int cmplx_core_parse_table(cmplx_core_t *core, const char *file)
             tree_insert(core->t,token.token,&data);
         }
         fclose(fp);
-		//tree_print(core->t, print_token);
         return 0;
     }
     fclose(fp);
@@ -161,18 +159,17 @@ int cmplx_core_complex_code(cmplx_core_t *core, char *filename)
 					continue;
 				}
 #endif
-            	//printf("%02x ,%c, %d\n",c,c,ftell(fp)-1);
                 fputc(c, tmp_fp);
             }
-            data = (struct token_s *)tree_get_adata(core->t, token.token);
+            tree_get_adata(core->t, token.token, &data);
+
             if (data != NULL) {
                 if (data->complex_token == NULL) {
                     data->complex_token = core->module->complex_token(token.token);
                 }
-            }
-            if (data->complex_token != NULL) {
-                printf("%s, %s\n", token.token, data->complex_token);
-				fputs(data->complex_token, tmp_fp);
+                if (data->complex_token != NULL) {
+				    fputs(data->complex_token, tmp_fp);
+                }
             }
            fseek(fp,curpos+1, SEEK_SET); 
 		   prevpos = curpos;

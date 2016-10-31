@@ -20,8 +20,8 @@ tree_free(tree_t *t, cmplx_btree_free_udata_pf free_pf);
 int 
 tree_insert(tree_t *t, void *key, void *data);
 
-void *
-tree_get_adata(tree_t *t, void *key);
+void
+tree_get_adata(tree_t *t, void *key, void **data);
 
 void 
 tree_print(tree_t *t, cmplx_btree_print_udata_pf print_pf);

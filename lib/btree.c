@@ -72,7 +72,7 @@ void tree_free(tree_t *t, cmplx_btree_free_udata_pf free_pf)
 	free(t);
 }
 
-static int insert_data(tree_t *t, itree_t *p, void *key, void *data)
+static void insert_data(tree_t *t, itree_t *p, void *key, void *data)
 {
 	int r;struct tnode_s *tn;
 	if (*p == NULL) {
@@ -82,7 +82,6 @@ static int insert_data(tree_t *t, itree_t *p, void *key, void *data)
 			tn = tree_get_tnode(t,*p);
 			t->init_udata_pf(*p,key,data);
 			tn->left = tn->right = NULL;
-			return 1;
 		}
 	}
 
@@ -95,45 +94,37 @@ static int insert_data(tree_t *t, itree_t *p, void *key, void *data)
 	} else {
 		t->init_udata_pf(*p,key,data);
 	}
-	return 0;
 }
 
 int tree_insert(tree_t *t, void *key, void *data)
 {
-	return insert_data(t, &t->root, key,data);
+	insert_data(t, &t->root, key,data);
+    return 0;
 }
 
-static void *get_data(tree_t *t, itree_t *p, void *key)
+static void get_data(tree_t *t, itree_t *p, void *key, void **data)
 {
     char *s = (char *)key;
     struct tnode_s *tn = NULL;
     tn = tree_get_tnode(t, *p);
     if (key == NULL) {
-        if (tn->left) get_data(t, &tn->left,key);
-        if (tn->right) get_data(t, &tn->right,key);
-        return *p;
+        *data = NULL;
     } else {
 		int cmp = 1;
 		cmp = t->udata_cmp_pf(key, *p);
-        if (cmp == 0) { return *p;}
-
-		if (!tn->left && !tn->right)
-		{
-			return NULL;
-		}
-
+        if (cmp == 0) { *data = *p;}
 		if (cmp < 0){
-			if (tn->left) return get_data(t, &tn->left, key);
+			if (tn->left) get_data(t, &tn->left, key, data);
 		}
 		if (cmp > 0) {
-			if (tn->right) return get_data(t, &tn->right, key);
+			if (tn->right) get_data(t, &tn->right, key, data);
 		}
     }
 }
 
-void *tree_get_adata(tree_t *t, void *key)
+void tree_get_adata(tree_t *t, void *key, void **data)
 {
-    return get_data(t, &t->root, key);   
+    get_data(t, &t->root, key, data);   
 }
 
 static void print_tree(tree_t *t, itree_t p,cmplx_btree_print_udata_pf print_pf)
