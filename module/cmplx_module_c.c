@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include "cmplx_module_c.h"
+#include "../lib/trie.h"
 
 typedef enum {
 	mc_start_s,					/* ¿ªÊ¼½âÎö */
@@ -38,17 +39,52 @@ static const char *keywords[] = {
 	"do","while","NULL", NULL
 };
 
+static const char *special_function[] = {
+    "main", "printf", "malloc", "alloc","abs",
+    "strdup", "strcat", "strcmp", "rand","strstr",
+    "fopen", "fgets", "fputs", "fgetc","fgetc",
+    "read", "write","strlen", "free", NULL
+};
+
 static const char *pre_char = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 static const char *other_char = "0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+static trie_t *trie = NULL;
+
+static int get_pos(char c) 
+{
+    int i;
+    for (i = 0; i < strlen(other_char); i++) {
+        if (c == other_char[i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int get_char(int pos)
+{
+    if (pos > 0 && pos < strlen(other_char)) {
+        return other_char[pos];
+    }
+    return -1;
+}
+
 int cmplx_mc_init(void)
 {
+    int i;
+
+    trie = trie_init(other_char, get_pos, get_char);
+    for (i = 0; special_function[i] != NULL; i++) {
+        trie_insert(trie, special_function[i]);
+    }
     srand((unsigned)time(NULL));
     return 0;
 }
 
 int cmplx_mc_exit(void)
 {
+    trie_free(trie);
     return 0;
 }
 
@@ -158,9 +194,9 @@ static mc_state_s state(mc_state_s s, int c)
 		if (!isalnum(c)) {
 			if (c == '_') {
 				s = mc_token_s;
-			} else if (c == '(') {
+			}/* else if (c == '(') {
 				s = mc_function_s;
-			} else {
+			} */else {
 				s = mc_token_end_s;
 			}
 		} else {
@@ -196,7 +232,7 @@ cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 			break;
 		case mc_token_end_s:
 			buf[i] = '\0';
-			if (!iskeyword(buf)) {
+			if (!iskeyword(buf) && !trie_has_item(trie, buf)) {
 				token->token = strdup(buf);
 				token->offset = ftell(fp)-1;
 				return 0;
@@ -207,12 +243,13 @@ cmplx_mc_scan_token(FILE *fp, cmplx_module_token_t *token)
 				memset(buf,0,MC_MAXBUFSIZE);
 				continue;
 			}
-		case mc_function_s:
+		/*case mc_function_s:
 			c = EOF;
 			s = mc_start_s;
 			i = 0;
 			memset(buf,0,MC_MAXBUFSIZE);
 			continue;
+        */
 		case mc_start_s:
 		case mc_precompile_s:
 		case mc_precomment_s:

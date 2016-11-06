@@ -1,2 +1,2 @@
 codeplex:
-	clang lib/*.c module/*.c src/*.c
+	clang -g lib/*.c module/*.c src/*.c

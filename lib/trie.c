@@ -98,6 +98,8 @@ static int is_in_trie(trie_t *trie, struct trie_node_s *node,const char *word)
 	int i = trie->getpos(c);
 
 	if (strlen(word) == 1) {
+        if(node->node[i] == NULL)
+            return 0;
 		if (node->node[i]->isword == YES) {
 			return 1;
 		} else {
